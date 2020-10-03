@@ -21,7 +21,6 @@ def getTerms():
             j += 1
             continue
         else:
-            # line = f"{term} - {description}\r"
             termsList.append([
                 term, description
             ])
@@ -33,7 +32,6 @@ def getTerms():
 
 def getRandomTerm(termsList):
     used = []
-
     term = ""
     randomTerm = random.randint(0, len(termsList))
     if randomTerm not in used:
@@ -45,8 +43,13 @@ def getRandomTerm(termsList):
 
 
 url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
+termsCount = -1
+while termsCount == -1:
+    termsCount = int(input("Колличество терминов: "))
+    if termsCount > 503:
+        print("Таблица содержит 503 термина")
+        termsCount = -1
 
-termsCount = int(input("Колличество терминов: "))
 response = requests.get(url)
 
 soup = BeautifulSoup(response.content, "html.parser")
@@ -59,4 +62,3 @@ termsList = getTerms()
 with open("glossary.txt", "w", encoding="UTF-8") as glossaryFile:
     for i in range(termsCount):
         glossaryFile.write(getRandomTerm(termsList))
-# glossaryFile.close()
