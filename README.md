@@ -9,4 +9,5 @@
 
 # Зависимости
 `requests` - `pip install requests`
+
 `BeautifulSoup` - `pip install beautifulsoup4`
