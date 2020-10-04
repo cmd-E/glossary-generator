@@ -6,3 +6,7 @@
 - Запустить `parser.py` из коммандной строки
 - Задать необходимое колличество терминов
 - Забрать термины из `glossary.txt` (находится в директории с `parser.py`)
+
+# Зависимости
+`requests` - `pip install requests`
+`BeautifulSoup` - `pip install beautifulsoup4`
