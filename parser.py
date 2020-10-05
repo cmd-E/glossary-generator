@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import docx
+import sys
 
 
 def getTerms():
@@ -49,7 +50,7 @@ def getRandomTerm(termsList):
 
 def docExport(terms):
     for i in range(len(terms)):
-        terms[i] = terms[i].split(" - ")
+        terms[i] = terms[i].split(" - ", 1)
     doc = docx.Document()
     doc.add_heading("Глоссарий", 0)
     table = doc.add_table(rows=1, cols=2)
@@ -57,10 +58,18 @@ def docExport(terms):
     hdr_Cells = table.rows[0].cells
     hdr_Cells[0].text = "Термин"
     hdr_Cells[1].text = "Значение"
-    for term, description in terms:
-        row_Cells = table.add_row().cells
-        row_Cells[0].text = term
-        row_Cells[1].text = description
+    try:
+        i = 0
+        for term, description in terms:
+            row_Cells = table.add_row().cells
+            row_Cells[0].text = term
+            row_Cells[1].text = description
+            i += 1
+    except:
+        print(f"Exception occured: {sys.exc_info()[0]}")
+        print(f"Term: {term} Description: {description} I: {i}")
+        print(terms[i])
+
     doc.save("glossary.docx")
 
 
