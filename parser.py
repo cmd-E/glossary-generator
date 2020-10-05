@@ -31,14 +31,19 @@ def getTerms():
     return termsList
 
 
+used = []
+
+
 def getRandomTerm(termsList):
-    used = []
     term = ""
+    line = ""
     randomTerm = random.randint(0, len(termsList))
     if randomTerm not in used:
         term = termsList[randomTerm]
         line = f"{term[0]} - {term[1]}\n"
         used.append(randomTerm)
+    else:
+        line = getRandomTerm(termsList)
 
     return line
 
@@ -64,8 +69,8 @@ url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
 termsCount = -1
 while termsCount == -1:
     termsCount = int(input("Колличество терминов: "))
-    if termsCount > 503:
-        print("Таблица содержит 503 термина")
+    if termsCount >= 502:
+        print("Таблица содержит 502 термина")
         termsCount = -1
 
 response = requests.get(url)
