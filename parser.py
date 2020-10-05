@@ -10,6 +10,16 @@ def getTerms():
     termsList = []
     j = 0
     for tr in trs:
+        if j == 300:
+            print("Break")
+        elif j == 400:
+            print("Break")
+        elif j == 490:
+            print("Break")
+        elif j == len(trs) - 50:
+            print("Break")
+        elif j == len(trs) - 5:
+            print("Break")
         if j % 2 != 0:
             description = tr.find("td").find("p").getText()
             description = description.replace("\r", "")
@@ -35,16 +45,15 @@ used = []
 
 
 def getRandomTerm(termsList):
-    term = ""
     line = ""
-    randomTerm = random.randint(0, len(termsList))
+    term = ""
+    randomTerm = random.randint(0, len(termsList) - 1)
     if randomTerm not in used:
         term = termsList[randomTerm]
         line = f"{term[0]} - {term[1]}\n"
         used.append(randomTerm)
     else:
         line = getRandomTerm(termsList)
-
     return line
 
 
