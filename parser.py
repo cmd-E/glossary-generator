@@ -9,6 +9,16 @@ def getTerms():
     termsList = []
     j = 0
     for tr in trs:
+        if j == 300:
+            print("Break")
+        elif j == 400:
+            print("Break")
+        elif j == 490:
+            print("Break")
+        elif j == len(trs) - 50:
+            print("Break")
+        elif j == len(trs) - 5:
+            print("Break")
         if j % 2 != 0:
             description = tr.find("td").find("p").getText()
             description = description.replace("\r", "")
@@ -30,15 +40,19 @@ def getTerms():
     return termsList
 
 
+used = []
+
+
 def getRandomTerm(termsList):
-    used = []
+    line = ""
     term = ""
-    randomTerm = random.randint(0, len(termsList))
+    randomTerm = random.randint(0, len(termsList) - 1)
     if randomTerm not in used:
         term = termsList[randomTerm]
         line = f"{term[0]} - {term[1]}\n"
         used.append(randomTerm)
-
+    else:
+        line = getRandomTerm(termsList)
     return line
 
 
@@ -46,8 +60,8 @@ url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
 termsCount = -1
 while termsCount == -1:
     termsCount = int(input("Колличество терминов: "))
-    if termsCount > 503:
-        print("Таблица содержит 503 термина")
+    if termsCount >= 503:
+        print("Таблица содержит 502 термина")
         termsCount = -1
 
 response = requests.get(url)
