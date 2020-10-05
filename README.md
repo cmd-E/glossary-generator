@@ -11,3 +11,5 @@
 `requests` - `pip install requests`
 
 `BeautifulSoup` - `pip install beautifulsoup4`
+
+ `python-docx` - `pip install python-docx`
