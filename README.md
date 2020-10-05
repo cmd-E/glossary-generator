@@ -1,6 +1,7 @@
 # glossary-generator
-Генерирует термины в глоссарий.
-Берет информацию из http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm
+Создает глоссарий с терминами
+
+Берет информацию из http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm (500 терминов на русском языке)
 
 # Использование
 - Запустить `parser.py` из коммандной строки
