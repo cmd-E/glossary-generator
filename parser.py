@@ -12,13 +12,23 @@ def getTerms():
     j = 0
     for tr in trs:
         if j % 2 != 0:
-            description = tr.find("td").find("p").getText()
-            description = description.replace("\r", "")
-            description = description.replace("\n", "")
+            if lang.lower() == "рус":
+                description = tr.find("td").find("p").getText()
+                description = description.replace("\r", "")
+                description = description.replace("\n", "")
+            else:
+                description = tr.find_all("td")[1].find("p").getText()
+                description = description.replace("\r", "")
+                description = description.replace("\n", "")
         else:
-            term = tr.find("td").find("p").getText()
-            term = term.replace("\r", "")
-            term = term.replace("\n", "")
+            if lang.lower() == "рус":
+                term = tr.find("td").find("p").getText()
+                term = term.replace("\r", "")
+                term = term.replace("\n", "")
+            else:
+                term = tr.find_all("td")[1].find("p").getText()
+                term = term.replace("\r", "")
+                term = term.replace("\n", "")
         if term == "" or description == "":
             j += 1
             continue
@@ -56,8 +66,12 @@ def docExport(terms):
     table = doc.add_table(rows=1, cols=2)
     table.style = "Table Grid"
     hdr_Cells = table.rows[0].cells
-    hdr_Cells[0].text = "Термин"
-    hdr_Cells[1].text = "Значение"
+    if lang.lower() == "рус":
+        hdr_Cells[0].text = "Термин"
+        hdr_Cells[1].text = "Значение"
+    else:
+        hdr_Cells[0].text = "Термин"
+        hdr_Cells[1].text = "Терминнің мағынасы"
     try:
         i = 0
         for term, description in terms:
@@ -69,17 +83,28 @@ def docExport(terms):
         print(f"Exception occured: {sys.exc_info()[0]}")
         print(f"Term: {term} Description: {description} I: {i}")
         print(terms[i])
-
-    doc.save("glossary.docx")
+    filename = ""
+    if lang.lower() == "рус":
+        filename = "glossary_ru.docx"
+    else:
+        filename = "glossary_kz.docx"
+    doc.save(filename)
 
 
 url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
 termsCount = -1
+lang = "-"
 while termsCount == -1:
     termsCount = int(input("Колличество терминов: "))
     if termsCount >= 502:
         print("Таблица содержит 502 термина")
         termsCount = -1
+while lang == "-":
+    lang = input("Язык(РУС/каз): ")
+    if lang == "":
+        lang = "рус"
+    elif lang.lower() != "рус" and lang.lower() != "каз":
+        lang = "-"
 
 response = requests.get(url)
 
@@ -89,7 +114,12 @@ trs = trs[1:]
 termsList = getTerms()
 
 termsForExport = []
-with open("glossary.txt", "w", encoding="UTF-8") as glossaryFile:
+filename = ""
+if lang.lower() == "рус":
+    filename = "glossary_ru.txt"
+else:
+    filename = "glossary_kz.txt"
+with open(filename, "w", encoding="UTF-8") as glossaryFile:
     for i in range(termsCount):
         tempTerm = getRandomTerm(termsList)
         glossaryFile.write(tempTerm)
