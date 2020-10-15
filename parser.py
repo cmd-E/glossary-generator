@@ -96,19 +96,31 @@ termsCount = -1
 lang = "-"
 while termsCount == -1:
     termsCount = int(input("Колличество терминов: "))
-    if termsCount >= 502:
-        print("Таблица содержит 502 термина")
+    if termsCount >= 502 or termsCount < 1:
+        print("Таблица содержит 502 термина и колиичество терминов не может быть меньше 1")
         termsCount = -1
 while lang == "-":
     lang = input("Язык(РУС/каз): ")
-    if lang == "":
+    if lang.strip() == "":
         lang = "рус"
     elif lang.lower() != "рус" and lang.lower() != "каз":
         lang = "-"
 
-response = requests.get(url)
+response = ""
+try:
+    response = requests.get(url)
+except:
+    print("Unexpected error occured while getting response from glossary page: ",
+          sys.exc_info()[0])
+    exit()
 
-soup = BeautifulSoup(response.content, "html.parser")
+soup = ""
+try:
+    soup = BeautifulSoup(response.content, "html.parser")
+except:
+    print("Unexpected error occured while parsing response from glossary page: ",
+          sys.exc_info()[0])
+
 trs = soup.find("table").find_all("tr")
 trs = trs[1:]
 termsList = getTerms()
