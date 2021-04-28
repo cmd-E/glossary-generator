@@ -4,19 +4,16 @@ from terms_exporter import TermsExporter
 
 
 def main():
-    AppConfig.terms_count = -1
-    AppConfig.lang = "-"
-    while AppConfig.terms_count == -1:
-        AppConfig.terms_count = int(input("Колличество терминов: "))
-        if AppConfig.terms_count >= 502 or AppConfig.terms_count < 1:
-            print("Таблица содержит 502 термина и колиичество терминов не может быть меньше 1")
-            AppConfig.terms_count = -1
-    while AppConfig.lang == "-":
-        AppConfig.lang = input("Язык(РУС/каз): ")
-        if AppConfig.lang.strip() == "":
-            AppConfig.lang = "рус"
-        elif AppConfig.lang.lower() != "рус" and AppConfig.lang.lower() != "каз":
-            AppConfig.lang = "-"
+    terms_count = -1
+    lang = "-"
+    while terms_count < 1 or terms_count > 500:
+        terms_count = int(input("Колличество терминов (1-500): "))
+    while lang.lower() != "рус" and lang.lower() != "каз":
+        lang = input("Язык(РУС/каз): ")
+        if lang.strip() == "":
+            lang = "рус"
+    AppConfig.lang = lang
+    AppConfig.terms_count = terms_count
     selected_terms = TermsLoader.get_terms()
     TermsExporter.export_terms_to_txt(selected_terms, AppConfig.lang)
     TermsExporter.doc_export(selected_terms, AppConfig.lang)
