@@ -42,20 +42,6 @@ def get_terms(raw_terms: list, lang: str) -> list:
     return terms_list
 
 
-used = []
-
-
-def get_random_term(terms_list):
-    random_term = random.randint(0, len(terms_list) - 1)
-    if random_term not in used:
-        term = terms_list[random_term]
-        line = f"{term[0]} - {term[1]}\n"
-        used.append(random_term)
-    else:
-        line = get_random_term(terms_list)
-    return line
-
-
 def doc_export(terms: list, lang: str):
     for i in range(len(terms)):
         terms[i] = terms[i].split(" - ", 1)
@@ -90,6 +76,21 @@ def doc_export(terms: list, lang: str):
     doc.save(filename)
 
 
+def get_random_terms(terms_list: list, terms_count: int) -> list:
+    used_terms = []
+    selected_terms = []
+    for i in range(terms_count):
+        random_term = terms_list[random.randint(0, len(terms_list) - 1)]
+        formatted_term = f"{random_term[0]} - {random_term[1]}\n"
+        if formatted_term not in used_terms:
+            selected_terms.append(formatted_term)
+            used_terms.append(formatted_term)
+        else:
+            terms_count += 1
+            continue
+    return selected_terms
+
+
 def main():
     terms_count = -1
     lang = "-"
@@ -106,10 +107,11 @@ def main():
             lang = "-"
     raw_terms = load_raw_terms()
     terms_list = get_terms(raw_terms, lang)
-    export_terms(terms_list, terms_count, lang)
+    selected_terms = get_random_terms(terms_list, terms_count)
+    export_terms_to_txt(selected_terms, lang)
+    doc_export(selected_terms, lang)
 
 
-# returns list of raw table rows
 def load_raw_terms() -> list:
     url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
     response = ""
@@ -132,18 +134,14 @@ def load_raw_terms() -> list:
     return trs
 
 
-def export_terms(terms_list: list, terms_count: int, lang: str):
-    terms_for_export = []
+def export_terms_to_txt(selected_terms: list, lang: str):
     if lang.lower() == "рус":
         txt_filename = "glossary_ru.txt"
     else:
         txt_filename = "glossary_kz.txt"
     with open(txt_filename, "w", encoding="UTF-8") as glossaryFile:
-        for i in range(terms_count):
-            random_term = get_random_term(terms_list)
-            glossaryFile.write(random_term)
-            terms_for_export.append(random_term)
-    doc_export(terms_for_export, lang)
+        for term in selected_terms:
+            glossaryFile.write(term)
 
 
 if __name__ == "__main__":
