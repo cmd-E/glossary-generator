@@ -9,8 +9,6 @@
 - Забрать термины из `glossary.txt` (находится в директории с `parser.py`)
 
 # Зависимости
-`requests` - `pip install requests`
+`requests`, `BeautifulSoup`, `python-docx`
 
-`BeautifulSoup` - `pip install beautifulsoup4`
-
-`python-docx` - `pip install python-docx`
+Установить всё: `py -m pip install -r requirements.txt`
