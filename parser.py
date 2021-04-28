@@ -5,12 +5,12 @@ import docx
 import sys
 
 
-def getTerms():
+def get_terms(raw_terms: list, lang: str) -> list:
     description = ""
     term = ""
-    termsList = []
+    terms_list = []
     j = 0
-    for tr in trs:
+    for tr in raw_terms:
         if j % 2 != 0:
             if lang.lower() == "рус":
                 description = tr.find("td").find("p").getText()
@@ -33,57 +33,56 @@ def getTerms():
             j += 1
             continue
         else:
-            termsList.append([
+            terms_list.append([
                 term, description
             ])
             term = ""
             description = ""
             j += 1
-    return termsList
+    return terms_list
 
 
 used = []
 
 
-def getRandomTerm(termsList):
-    line = ""
-    term = ""
-    randomTerm = random.randint(0, len(termsList) - 1)
-    if randomTerm not in used:
-        term = termsList[randomTerm]
+def get_random_term(terms_list):
+    random_term = random.randint(0, len(terms_list) - 1)
+    if random_term not in used:
+        term = terms_list[random_term]
         line = f"{term[0]} - {term[1]}\n"
-        used.append(randomTerm)
+        used.append(random_term)
     else:
-        line = getRandomTerm(termsList)
+        line = get_random_term(terms_list)
     return line
 
 
-def docExport(terms):
+def doc_export(terms: list, lang: str):
     for i in range(len(terms)):
         terms[i] = terms[i].split(" - ", 1)
     doc = docx.Document()
     doc.add_heading("Глоссарий", 0)
     table = doc.add_table(rows=1, cols=2)
     table.style = "Table Grid"
-    hdr_Cells = table.rows[0].cells
+    header_cells = table.rows[0].cells
     if lang.lower() == "рус":
-        hdr_Cells[0].text = "Термин"
-        hdr_Cells[1].text = "Значение"
+        header_cells[0].text = "Термин"
+        header_cells[1].text = "Значение"
     else:
-        hdr_Cells[0].text = "Термин"
-        hdr_Cells[1].text = "Терминнің мағынасы"
+        header_cells[0].text = "Термин"
+        header_cells[1].text = "Терминнің мағынасы"
+    i = 0
+    term = ""
+    description = ""
     try:
-        i = 0
         for term, description in terms:
-            row_Cells = table.add_row().cells
-            row_Cells[0].text = term
-            row_Cells[1].text = description
+            row_cells = table.add_row().cells
+            row_cells[0].text = term
+            row_cells[1].text = description
             i += 1
     except:
-        print(f"Exception occured: {sys.exc_info()[0]}")
+        print(f"Exception occurred: {sys.exc_info()[0]}")
         print(f"Term: {term} Description: {description} I: {i}")
         print(terms[i])
-    filename = ""
     if lang.lower() == "рус":
         filename = "glossary_ru.docx"
     else:
@@ -91,50 +90,61 @@ def docExport(terms):
     doc.save(filename)
 
 
-url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
-termsCount = -1
-lang = "-"
-while termsCount == -1:
-    termsCount = int(input("Колличество терминов: "))
-    if termsCount >= 502 or termsCount < 1:
-        print("Таблица содержит 502 термина и колиичество терминов не может быть меньше 1")
-        termsCount = -1
-while lang == "-":
-    lang = input("Язык(РУС/каз): ")
-    if lang.strip() == "":
-        lang = "рус"
-    elif lang.lower() != "рус" and lang.lower() != "каз":
-        lang = "-"
+def main():
+    terms_count = -1
+    lang = "-"
+    while terms_count == -1:
+        terms_count = int(input("Колличество терминов: "))
+        if terms_count >= 502 or terms_count < 1:
+            print("Таблица содержит 502 термина и колиичество терминов не может быть меньше 1")
+            terms_count = -1
+    while lang == "-":
+        lang = input("Язык(РУС/каз): ")
+        if lang.strip() == "":
+            lang = "рус"
+        elif lang.lower() != "рус" and lang.lower() != "каз":
+            lang = "-"
+    raw_terms = load_raw_terms()
+    terms_list = get_terms(raw_terms, lang)
+    export_terms(terms_list, terms_count, lang)
 
-response = ""
-try:
-    response = requests.get(url)
-except:
-    print("Unexpected error occured while getting response from glossary page: ",
-          sys.exc_info()[0])
-    exit()
 
-soup = ""
-try:
-    soup = BeautifulSoup(response.content, "html.parser")
-except:
-    print("Unexpected error occured while parsing response from glossary page: ",
-          sys.exc_info()[0])
+# returns list of raw table rows
+def load_raw_terms() -> list:
+    url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
+    response = ""
+    try:
+        response = requests.get(url)
+    except:
+        print("Unexpected error occurred while getting response from glossary page: ",
+              sys.exc_info()[0])
+        exit()
 
-trs = soup.find("table").find_all("tr")
-trs = trs[1:]
-termsList = getTerms()
+    soup = ""
+    try:
+        soup = BeautifulSoup(response.content, "html.parser")
+    except:
+        print("Unexpected error occurred while parsing response from glossary page: ",
+              sys.exc_info()[0])
 
-termsForExport = []
-filename = ""
-if lang.lower() == "рус":
-    filename = "glossary_ru.txt"
-else:
-    filename = "glossary_kz.txt"
-with open(filename, "w", encoding="UTF-8") as glossaryFile:
-    for i in range(termsCount):
-        tempTerm = getRandomTerm(termsList)
-        glossaryFile.write(tempTerm)
-        termsForExport.append(tempTerm)
+    trs = soup.find("table").find_all("tr")
+    trs = trs[1:]
+    return trs
 
-docExport(termsForExport)
+
+def export_terms(terms_list: list, terms_count: int, lang: str):
+    terms_for_export = []
+    if lang.lower() == "рус":
+        txt_filename = "glossary_ru.txt"
+    else:
+        txt_filename = "glossary_kz.txt"
+    with open(txt_filename, "w", encoding="UTF-8") as glossaryFile:
+        for i in range(terms_count):
+            random_term = get_random_term(terms_list)
+            glossaryFile.write(random_term)
+            terms_for_export.append(random_term)
+    doc_export(terms_for_export, lang)
+
+
+if __name__ == "__main__":
+    main()
