@@ -5,7 +5,7 @@ import docx
 import sys
 
 
-def get_terms(raw_terms: list, lang: str) -> list:
+def parse_terms(raw_terms: list, lang: str) -> list:
     description = ""
     term = ""
     terms_list = []
@@ -106,7 +106,7 @@ def main():
         elif lang.lower() != "рус" and lang.lower() != "каз":
             lang = "-"
     raw_terms = load_raw_terms()
-    terms_list = get_terms(raw_terms, lang)
+    terms_list = parse_terms(raw_terms, lang)
     selected_terms = get_random_terms(terms_list, terms_count)
     export_terms_to_txt(selected_terms, lang)
     doc_export(selected_terms, lang)
