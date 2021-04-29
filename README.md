@@ -23,7 +23,7 @@ me@pc:~$ python3 main.py
 
 
 # Зависимости
-`requests`, `BeautifulSoup`, `python-docx`
+`requests`, `BeautifulSoup`, `python-docx`, `tqdm`
 
 
 Установить всё: `python3 -m pip install -r requirements.txt`
