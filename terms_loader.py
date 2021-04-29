@@ -10,6 +10,7 @@ from app_config import AppConfig
 class TermsLoader:
     @classmethod
     def get_terms(cls) -> list:
+        """Loads terms from url, parses it, and returns 'terms_count' random terms"""
         raw_terms = cls.__load_raw_terms()
         terms_list = cls.__parse_terms(raw_terms, AppConfig.lang)
         selected_terms = cls.__get_random_terms(terms_list)
