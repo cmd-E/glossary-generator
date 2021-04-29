@@ -1,3 +1,4 @@
+import os.path
 import sys
 import docx
 from tqdm import tqdm
@@ -7,9 +8,9 @@ class TermsExporter:
     @classmethod
     def doc_export(cls, terms: list, lang: str):
         if lang.lower() == "рус":
-            filename = "glossary_ru.docx"
+            filename = "docs/glossary_ru.docx"
         else:
-            filename = "glossary_kz.docx"
+            filename = "docs/glossary_kz.docx"
         print(f"Экспорт в {filename}...")
         for i in range(len(terms)):
             terms[i] = terms[i].split(" - ", 1)
@@ -43,9 +44,9 @@ class TermsExporter:
     @classmethod
     def export_terms_to_txt(cls, selected_terms: list, lang: str):
         if lang.lower() == "рус":
-            txt_filename = "glossary_ru.txt"
+            txt_filename = "docs/glossary_ru.txt"
         else:
-            txt_filename = "glossary_kz.txt"
+            txt_filename = "docs/glossary_kz.txt"
         print(f"Экспорт в {txt_filename}...")
         with open(txt_filename, "w", encoding="UTF-8") as glossaryFile:
             for term in selected_terms:

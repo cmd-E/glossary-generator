@@ -20,7 +20,9 @@ class TermsLoader:
     @staticmethod
     def __load_raw_terms() -> list:
         url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
-        html_filename = 'terms_origin.html'
+        if not os.path.isdir("docs"):
+            os.mkdir("docs")
+        html_filename = 'docs/terms_origin.html'
         if not os.path.isfile(html_filename):
             print('Загрузка терминов...')
             try:
