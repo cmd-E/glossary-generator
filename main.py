@@ -7,7 +7,10 @@ def main():
     terms_count = -1
     lang = "-"
     while terms_count < 1 or terms_count > 500:
-        terms_count = int(input("Колличество терминов (1-500): "))
+        try:
+            terms_count = int(input("Колличество терминов (1-500): "))
+        except ValueError:
+            continue
     while lang.lower() != "рус" and lang.lower() != "каз":
         lang = input("Язык(РУС/каз): ")
         if lang.strip() == "":
