@@ -1,6 +1,7 @@
 import os.path
 import random
 import sys
+
 import requests
 from bs4 import BeautifulSoup
 from app_config import AppConfig
@@ -46,13 +47,13 @@ class TermsLoader:
         except:
             print("Unexpected error occurred while parsing response from glossary page: ",
                   sys.exc_info()[0])
-        print("Парсинг терминов...")
         trs = soup.find("table").find_all("tr")
         trs = trs[1:]
         return trs
 
     @classmethod
     def __parse_terms(cls, raw_terms: list, lang: str) -> list:
+        print("Парсинг терминов...")
         description = ""
         term = ""
         terms_list = []
@@ -90,6 +91,7 @@ class TermsLoader:
 
     @classmethod
     def __get_random_terms(cls, terms_list: list) -> list:
+        print("Выбор случайных терминов...")
         used_terms = []
         selected_terms = []
         for i in range(AppConfig.terms_count):
