@@ -1,4 +1,4 @@
-beautifulsoup4==4.13.5
+beautifulsoup4==4.14.3
 python-docx==1.2.0
 requests==2.32.5
 tqdm~=4.67.1
