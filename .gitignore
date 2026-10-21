@@ -4,3 +4,8 @@
 *.html
 .idea/
 __pycache__
+!requirements.txt
+!requirements-dev.txt
+.artifacts/
+.coverage
+htmlcov/

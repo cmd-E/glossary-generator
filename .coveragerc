@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = main,terms_loader,terms_exporter
+
+[report]
+show_missing = True
+fail_under = 98
