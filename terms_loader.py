@@ -1,108 +1,81 @@
-import os.path
+"""Load, validate and sample structured glossary data."""
+from dataclasses import dataclass
+from pathlib import Path
 import random
-import sys
+import tempfile
+import os
 
-import requests
-from bs4 import BeautifulSoup
-from app_config import AppConfig
-from tqdm import tqdm
+SOURCE_URL = "https://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
+MAX_DOWNLOAD = 5 * 1024 * 1024
 
+@dataclass(frozen=True)
+class Term:
+    name: str
+    description: str
 
-class TermsLoader:
-    @classmethod
-    def get_terms(cls) -> list:
-        """Loads terms from url, parses it, and returns 'terms_count' random terms"""
-        raw_terms = cls.__load_raw_terms()
-        terms_list = cls.__parse_terms(raw_terms, AppConfig.lang)
-        selected_terms = cls.__get_random_terms(terms_list)
-        return selected_terms
+def parse_terms(html, language):
+    from bs4 import BeautifulSoup
+    column = {"рус": 0, "каз": 1}.get(language.lower())
+    if column is None:
+        raise ValueError("Неизвестный язык")
+    table = BeautifulSoup(html, "html.parser").find("table")
+    if table is None:
+        raise ValueError("Таблица терминов не найдена")
+    rows = table.find_all("tr")[1:]
+    if not rows or len(rows) % 2:
+        raise ValueError("Неполная таблица терминов")
+    terms = []
+    for index in range(0, len(rows), 2):
+        pair = []
+        for row in rows[index:index + 2]:
+            cells = row.find_all("td")
+            if len(cells) <= column:
+                raise ValueError(f"Отсутствует перевод в строке {index + 2}")
+            text = cells[column].get_text(" ", strip=True)
+            if not text:
+                raise ValueError(f"Пустая ячейка в строке {index + 2}")
+            pair.append(text)
+        terms.append(Term(*pair))
+    return list(dict.fromkeys(terms))
 
-    @staticmethod
-    def __load_raw_terms() -> list:
-        url = "http://libr.aues.kz/facultet/frts/kaf_aes/52/umm/aes_1.htm"
-        if not os.path.isdir("docs"):
-            os.mkdir("docs")
-        html_filename = 'docs/terms_origin.html'
-        if not os.path.isfile(html_filename):
-            print('Загрузка терминов...')
-            try:
-                response = requests.get(url, stream=True)
-                total_size_in_bytes = int(response.headers.get('content-length', 0))
-                block_size = 1024  # 1 Kibibyte
-                progress_bar = tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True)
-                with open(html_filename, 'wb') as file:
-                    for data in response.iter_content(block_size):
-                        progress_bar.update(len(data))
-                        file.write(data)
-                progress_bar.close()
-                if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-                    print("ERROR, something went wrong")
-            except:
-                print("Unexpected error occurred while getting response from glossary page: ",
-                      sys.exc_info()[0])
-                exit()
-        soup = ""
+def sample_terms(terms, count, rng=None):
+    population = list(dict.fromkeys(terms))
+    if not 1 <= count <= len(population):
+        raise ValueError(f"Доступно уникальных терминов: {len(population)}")
+    return (rng or random).sample(population, count)
+
+def load_terms(language, cache_path, session=None):
+    cache = Path(cache_path)
+    if cache.is_file():
         try:
-            with open(html_filename, 'r', encoding="utf-8") as file:
-                content = file.read()
-            soup = BeautifulSoup(content, "html.parser")
-        except:
-            print("Unexpected error occurred while parsing response from glossary page: ",
-                  sys.exc_info()[0])
-        trs = soup.find("table").find_all("tr")
-        trs = trs[1:]
-        return trs
-
-    @classmethod
-    def __parse_terms(cls, raw_terms: list, lang: str) -> list:
-        print("Парсинг терминов...")
-        description = ""
-        term = ""
-        terms_list = []
-        j = 0
-        for tr in raw_terms:
-            if j % 2 != 0:
-                if lang.lower() == "рус":
-                    description = tr.find("td").find("p").getText()
-                    description = description.replace("\r", "")
-                    description = description.replace("\n", "")
-                else:
-                    description = tr.find_all("td")[1].find("p").getText()
-                    description = description.replace("\r", "")
-                    description = description.replace("\n", "")
-            else:
-                if lang.lower() == "рус":
-                    term = tr.find("td").find("p").getText()
-                    term = term.replace("\r", "")
-                    term = term.replace("\n", "")
-                else:
-                    term = tr.find_all("td")[1].find("p").getText()
-                    term = term.replace("\r", "")
-                    term = term.replace("\n", "")
-            if term == "" or description == "":
-                j += 1
-                continue
-            else:
-                terms_list.append([
-                    term, description
-                ])
-                term = ""
-                description = ""
-                j += 1
-        return terms_list
-
-    @classmethod
-    def __get_random_terms(cls, terms_list: list) -> list:
-        print("Выбор случайных терминов...")
-        used_terms = []
-        selected_terms = []
-        for i in range(AppConfig.terms_count):
-            random_term = terms_list[random.randint(0, len(terms_list) - 1)]
-            formatted_term = f"{random_term[0]} - {random_term[1]}\n"
-            if formatted_term not in used_terms:
-                selected_terms.append(formatted_term)
-                used_terms.append(formatted_term)
-            else:
-                AppConfig.terms_count += 1
-                continue
-        return selected_terms
+            return parse_terms(cache.read_text(encoding="utf-8"), language)
+        except (ValueError, UnicodeError):
+            pass
+    if session is None:
+        import requests
+        session = requests
+    client = session
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    with client.get(SOURCE_URL, stream=True, timeout=(5, 20)) as response:
+        response.raise_for_status()
+        if not response.url.lower().startswith("https://") or any(
+                not hop.url.lower().startswith("https://") for hop in response.history):
+            raise ValueError("Источник перенаправил запрос на незащищенный HTTP")
+        data = bytearray()
+        for chunk in response.iter_content(8192):
+            data.extend(chunk)
+            if len(data) > MAX_DOWNLOAD:
+                raise ValueError("Ответ источника слишком большой")
+    text = data.decode("utf-8")
+    terms = parse_terms(text, language)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=cache.parent,
+                                         delete=False) as output:
+            temporary = output.name
+            output.write(text)
+        os.replace(temporary, cache)
+    finally:
+        if temporary and os.path.exists(temporary):
+            os.unlink(temporary)
+    return terms

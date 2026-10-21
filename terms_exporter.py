@@ -1,53 +1,41 @@
-import os.path
-import sys
-import docx
-from tqdm import tqdm
+"""Export structured terms without modifying the caller's data."""
+from pathlib import Path
+import os
+import tempfile
 
+def _destination(directory, language, suffix):
+    code = {"рус": "ru", "каз": "kz"}.get(language.lower())
+    if code is None:
+        raise ValueError("Неизвестный язык")
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / f"glossary_{code}.{suffix}"
 
-class TermsExporter:
-    @classmethod
-    def doc_export(cls, terms: list, lang: str):
-        if lang.lower() == "рус":
-            filename = "docs/glossary_ru.docx"
-        else:
-            filename = "docs/glossary_kz.docx"
-        print(f"Экспорт в {filename}...")
-        for i in range(len(terms)):
-            terms[i] = terms[i].split(" - ", 1)
-        doc = docx.Document()
-        doc.add_heading("Глоссарий", 0)
-        table = doc.add_table(rows=1, cols=2)
-        table.style = "Table Grid"
-        header_cells = table.rows[0].cells
-        if lang.lower() == "рус":
-            header_cells[0].text = "Термин"
-            header_cells[1].text = "Значение"
-        else:
-            header_cells[0].text = "Термин"
-            header_cells[1].text = "Терминнің мағынасы"
-        i = 0
-        term = ""
-        description = ""
-        try:
-            for term, description in tqdm(terms):
-                row_cells = table.add_row().cells
-                row_cells[0].text = term
-                row_cells[1].text = description
-                i += 1
-        except:
-            print(f"Exception occurred: {sys.exc_info()[0]}")
-            print(f"Term: {term} Description: {description} I: {i}")
-            print(terms[i])
+def _save_atomic(destination, write):
+    handle, temporary = tempfile.mkstemp(dir=destination.parent, suffix=destination.suffix)
+    os.close(handle)
+    try:
+        write(temporary)
+        os.replace(temporary, destination)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    return destination
 
-        doc.save(filename)
+def export_txt(terms, language, directory):
+    content = "".join(f"{term.name} - {term.description}\n" for term in terms)
+    return _save_atomic(_destination(directory, language, "txt"),
+                        lambda path: Path(path).write_text(content, encoding="utf-8"))
 
-    @classmethod
-    def export_terms_to_txt(cls, selected_terms: list, lang: str):
-        if lang.lower() == "рус":
-            txt_filename = "docs/glossary_ru.txt"
-        else:
-            txt_filename = "docs/glossary_kz.txt"
-        print(f"Экспорт в {txt_filename}...")
-        with open(txt_filename, "w", encoding="UTF-8") as glossaryFile:
-            for term in selected_terms:
-                glossaryFile.write(term)
+def export_docx(terms, language, directory):
+    import docx
+    document = docx.Document()
+    document.add_heading("Глоссарий", 0)
+    table = document.add_table(rows=1, cols=2)
+    table.style = "Table Grid"
+    table.rows[0].cells[0].text = "Термин"
+    table.rows[0].cells[1].text = "Значение" if language.lower() == "рус" else "Терминнің мағынасы"
+    for term in terms:
+        cells = table.add_row().cells
+        cells[0].text, cells[1].text = term.name, term.description
+    return _save_atomic(_destination(directory, language, "docx"), document.save)
