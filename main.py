@@ -1,26 +1,29 @@
-from app_config import AppConfig
-from terms_loader import TermsLoader
-from terms_exporter import TermsExporter
-
+from pathlib import Path
+import sys
+from terms_loader import load_terms, sample_terms
+from terms_exporter import export_txt, export_docx
 
 def main():
-    terms_count = -1
-    lang = "-"
-    while terms_count < 1 or terms_count > 500:
+    while True:
         try:
-            terms_count = int(input("Колличество терминов (1-500): "))
+            count = int(input("Количество терминов (1-500): "))
+            if 1 <= count <= 500:
+                break
         except ValueError:
-            continue
-    while lang.lower() != "рус" and lang.lower() != "каз":
-        lang = input("Язык(РУС/каз): ")
-        if lang.strip() == "":
-            lang = "рус"
-    AppConfig.lang = lang
-    AppConfig.terms_count = terms_count
-    selected_terms = TermsLoader.get_terms()
-    TermsExporter.export_terms_to_txt(selected_terms, AppConfig.lang)
-    TermsExporter.doc_export(selected_terms, AppConfig.lang)
-
+            pass
+    while True:
+        language = input("Язык(РУС/каз): ").strip().lower() or "рус"
+        if language in ("рус", "каз"):
+            break
+    directory = Path(__file__).resolve().parent / "docs"
+    try:
+        terms = sample_terms(load_terms(language, directory / "terms_origin.html"), count)
+        print(f"Сохранено: {export_txt(terms, language, directory)}")
+        print(f"Сохранено: {export_docx(terms, language, directory)}")
+    except Exception as error:
+        print(f"Не удалось создать глоссарий: {error}", file=sys.stderr)
+        return 1
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
